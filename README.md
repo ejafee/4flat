@@ -17,8 +17,6 @@
 - [Usage](#-usage)
 - [Internal Datasets](#-internal-datasets)
 - [Environment Variables](#-environment-variables)
-- [Contributing](#-contributing)
-- [License](#-license)
 
 ---
 
