@@ -1,3 +1,5 @@
-streamlit
+flask
 pandas
-zhipuai
+openpyxl
+anthropic
+python-dotenv

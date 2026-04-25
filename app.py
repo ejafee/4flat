@@ -1,9 +1,10 @@
+import json
 import os
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request
+from flask import Flask, Response, render_template, request
 from data_handler import parse_uploaded_file, load_internal_datasets, build_inventory_summary
 from prompt_engine import SYSTEM_PROMPT, build_user_prompt
-from glm_client import get_strategy
+from glm_client import get_strategy, stream_strategy
 
 app = Flask(__name__)
 app.secret_key = "resa-strategist-secret"
@@ -28,15 +29,30 @@ def index():
 
 @app.route("/analyse", methods=["POST"])
 def analyse():
-    business_name = request.form.get("business_name", "").strip()
-    business_type = request.form.get("business_type", "").strip()
-    business_context = request.form.get("business_context", "").strip()
+    user_prompt, meta_json = _build_prompts_from_request(request)
+    meta = json.loads(meta_json)
 
-    item_names = request.form.getlist("item_name[]")
-    cost_prices = request.form.getlist("cost_price[]")
-    sell_prices = request.form.getlist("sell_price[]")
-    stock_qtys = request.form.getlist("stock_qty[]")
-    units_solds = request.form.getlist("units_sold[]")
+    strategy = get_strategy(SYSTEM_PROMPT, user_prompt)
+
+    return render_template(
+        "result.html",
+        strategy=strategy,
+        business_name=meta["business_name"],
+        business_type=meta["business_type"],
+        inventory_items=meta["inventory_items"],
+    )
+
+
+def _build_prompts_from_request(req):
+    business_name = req.form.get("business_name", "").strip()
+    business_type = req.form.get("business_type", "").strip()
+    business_context = req.form.get("business_context", "").strip()
+
+    item_names = req.form.getlist("item_name[]")
+    cost_prices = req.form.getlist("cost_price[]")
+    sell_prices = req.form.getlist("sell_price[]")
+    stock_qtys = req.form.getlist("stock_qty[]")
+    units_solds = req.form.getlist("units_sold[]")
 
     inventory_items = []
     for name, cp, sp, sq, us in zip(item_names, cost_prices, sell_prices, stock_qtys, units_solds):
@@ -53,8 +69,8 @@ def analyse():
     internal_market_context = load_internal_datasets()
 
     uploaded_data_summary = None
-    if "file" in request.files:
-        file = request.files["file"]
+    if "file" in req.files:
+        file = req.files["file"]
         if file and file.filename and file.filename.strip() != "":
             if allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -78,15 +94,25 @@ def analyse():
         internal_market_context,
     )
 
-    strategy = get_strategy(SYSTEM_PROMPT, user_prompt)
+    meta = json.dumps({
+        "business_name": business_name,
+        "business_type": business_type,
+        "inventory_items": inventory_items,
+    })
+    return user_prompt, meta
 
-    return render_template(
-        "result.html",
-        strategy=strategy,
-        business_name=business_name,
-        business_type=business_type,
-        inventory_items=inventory_items,
-    )
+
+@app.route("/stream", methods=["POST"])
+def stream():
+    user_prompt, meta = _build_prompts_from_request(request)
+
+    def generate():
+        yield f"data: {meta}\n\n"
+        for chunk in stream_strategy(SYSTEM_PROMPT, user_prompt):
+            yield f"data: {json.dumps(chunk)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return Response(generate(), mimetype="text/event-stream")
 
 
 if __name__ == "__main__":
