@@ -108,11 +108,23 @@ def stream():
 
     def generate():
         yield f"data: {meta}\n\n"
-        for chunk in stream_strategy(SYSTEM_PROMPT, user_prompt):
-            yield f"data: {json.dumps(chunk)}\n\n"
+
+        try:
+            got_chunk = False
+            for chunk in stream_strategy(SYSTEM_PROMPT, user_prompt):
+                got_chunk = True
+                yield f"data: {json.dumps(chunk)}\n\n"
+        except Exception:
+            # Streaming failed — fall back to non-streaming
+            if not got_chunk:
+                yield f"data: {json.dumps('')}\n\n"
+                fallback = get_strategy(SYSTEM_PROMPT, user_prompt)
+                yield f"data: {json.dumps(fallback)}\n\n"
+
         yield "data: [DONE]\n\n"
 
-    return Response(generate(), mimetype="text/event-stream")
+    return Response(generate(), mimetype="text/event-stream",
+                    headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"})
 
 
 if __name__ == "__main__":

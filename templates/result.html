@@ -5,9 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RESA — Strategy</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { background: #0f172a; }
-        .strategy-text { white-space: pre-wrap; word-wrap: break-word; }
+        #strategy-content h1, #strategy-content h2, #strategy-content h3 { color: #fbbf24; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+        #strategy-content h1 { font-size: 1.25rem; }
+        #strategy-content h2 { font-size: 1.125rem; }
+        #strategy-content h3 { font-size: 1rem; }
+        #strategy-content p { margin-bottom: 0.5rem; }
+        #strategy-content ul, #strategy-content ol { margin-bottom: 0.5rem; padding-left: 1.5rem; }
+        #strategy-content li { margin-bottom: 0.25rem; }
+        #strategy-content strong { color: #fbbf24; }
+        #strategy-content hr { border-color: #334155; margin: 1rem 0; }
+        #strategy-content table { width: 100%; margin-bottom: 0.75rem; }
+        #strategy-content th { color: #94a3b8; text-align: left; padding: 0.25rem 0.5rem; border-bottom: 1px solid #334155; font-size: 0.8rem; }
+        #strategy-content td { padding: 0.25rem 0.5rem; border-bottom: 1px solid #1e293b; font-size: 0.875rem; }
+        #strategy-content blockquote { border-left: 3px solid #f59e0b; padding-left: 0.75rem; color: #cbd5e1; margin: 0.5rem 0; }
     </style>
 </head>
 <body class="min-h-screen text-gray-100">
@@ -59,7 +72,7 @@
 
     <!-- STRATEGY OUTPUT -->
     <div class="bg-slate-800 rounded-2xl p-6 md:p-8 shadow-lg mb-8 max-h-[80vh] overflow-y-auto">
-        <div class="strategy-text text-gray-200 leading-relaxed text-base" id="strategy-content">{{ strategy }}</div>
+        <div class="strategy-text text-gray-200 leading-relaxed text-base" id="strategy-content"></div>
     </div>
 
     <!-- BUTTONS -->
@@ -76,15 +89,11 @@
 </div>
 
 <script>
-function styleSectionHeaders() {
+(function() {
     const el = document.getElementById('strategy-content');
-    if (!el) return;
-    const html = el.innerHTML;
-    el.innerHTML = html.replace(
-        /^(📊|🧠|🎯|📱|📉|📈|💬)(.*)$/gm,
-        '<span class="text-amber-400 font-bold text-lg block mt-6 mb-2">$1$2</span>'
-    );
-}
+    const raw = {{ strategy | tojson }};
+    el.innerHTML = marked.parse(raw);
+})();
 
 function copyStrategy() {
     const text = document.getElementById('strategy-content').innerText;
@@ -101,8 +110,6 @@ function copyStrategy() {
         }, 2000);
     });
 }
-
-styleSectionHeaders();
 </script>
 
 </body>

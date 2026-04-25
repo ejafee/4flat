@@ -17,7 +17,7 @@ def _get_client_and_model():
     if not model:
         return None, None, "Error: ANTHROPIC_MODEL not set in .env"
 
-    client = anthropic.Anthropic(api_key=api_key, base_url=base_url)
+    client = anthropic.Anthropic(api_key=api_key, base_url=base_url, timeout=120)
     return client, model, None
 
 
