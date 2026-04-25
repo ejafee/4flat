@@ -332,10 +332,7 @@ document.getElementById('resa-form').addEventListener('submit', function(e) {
                 reader.read().then(function(result) {
                     if (result.done) {
                         clearTimeout(fallbackTimer);
-                        if (fullText) {
-                            try { contentEl.innerHTML = marked.parse(fullText); }
-                            catch (_) { contentEl.textContent = fullText; }
-                        }
+                        if (fullText) contentEl.innerHTML = marked.parse(fullText);
                         return;
                     }
 
@@ -352,8 +349,7 @@ document.getElementById('resa-form').addEventListener('submit', function(e) {
 
                         if (data === '[DONE]') {
                             clearTimeout(fallbackTimer);
-                            try { contentEl.innerHTML = marked.parse(fullText); }
-                            catch (_) { contentEl.textContent = fullText; }
+                            contentEl.innerHTML = marked.parse(fullText);
                             return;
                         }
 

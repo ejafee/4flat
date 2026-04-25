@@ -1,4 +1,5 @@
 import os
+import httpx
 import anthropic
 from dotenv import load_dotenv
 
@@ -17,7 +18,21 @@ def _get_client_and_model():
     if not model:
         return None, None, "Error: ANTHROPIC_MODEL not set in .env"
 
-    client = anthropic.Anthropic(api_key=api_key, base_url=base_url, timeout=120)
+    # Use a custom httpx client with a long timeout to handle slow proxy responses
+    http_client = httpx.Client(
+        timeout=httpx.Timeout(
+            connect=10.0,
+            read=180.0,    # 3 minutes read timeout — handles slow GLM responses
+            write=10.0,
+            pool=10.0,
+        )
+    )
+
+    client = anthropic.Anthropic(
+        api_key=api_key,
+        base_url=base_url,
+        http_client=http_client,
+    )
     return client, model, None
 
 
@@ -40,6 +55,7 @@ def get_strategy(system_prompt, user_prompt):
 
 
 def stream_strategy(system_prompt, user_prompt):
+    """Streaming kept as fallback but not used by default."""
     try:
         client, model, err = _get_client_and_model()
         if err:
