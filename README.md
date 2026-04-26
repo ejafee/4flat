@@ -17,6 +17,7 @@
 - [Usage](#-usage)
 - [Internal Datasets](#-internal-datasets)
 - [Environment Variables](#-environment-variables)
+- [Pitching Video](#pitching-video)
 
 ---
 
@@ -157,3 +158,7 @@ Suggested datasets to add:
 
 ---
 
+## 🎥pitching-video
+
+Heres a simple brief explanation of the program:
+https://drive.google.com/file/d/1mvMdBNHnZrovwWRVxpTxGv6esOiOT9yD/view?usp=sharing
